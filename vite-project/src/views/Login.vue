@@ -53,7 +53,7 @@
   
         <!-- 登录相关表单 -->
         <el-form 
-        ref="form" 
+        ref="loginForm" 
         size="large" 
         autocomplete="off" 
         v-else
@@ -85,7 +85,11 @@
             </div>
           </el-form-item>
           <el-form-item>
-            <el-button class="button" type="primary" auto-insert-space
+            <el-button 
+            class="button" 
+            type="primary" 
+            auto-insert-space
+            @click="userLogin"
               >登录</el-button
             >
           </el-form-item>
@@ -99,18 +103,19 @@
   
   <script setup>
   import { ref } from "vue";
-  import {userRegisterAPI} from '../apis/user';
-import { ElMessage } from "element-plus";
+
+
+  import {userRegisterAPI,userLoginAPI} from '../apis/user';
+  import { ElMessage } from "element-plus";
+  import { useRouter } from "vue-router";
+  const router = useRouter();
   const isLogin = ref(false);
   const regForm = ref({
     username: "",
     password: "",
     repassword: "",
   });
-  const logForm = ref({
-    username: "",
-    password: "",
-  });
+  
   const rules = ref({
     username: [
       { required: true, message: "请输入用户名", trigger: "blur" },
@@ -135,6 +140,7 @@ import { ElMessage } from "element-plus";
       }
     ]
   })
+  
   const registerForm = ref()
   const userRegister = function (formEl) {
   registerForm.value.validate((valid) => {
@@ -154,6 +160,32 @@ import { ElMessage } from "element-plus";
     }
   })
 }
+const logForm = ref({
+    username: "",
+    password: "",
+  });
+const loginForm = ref()
+import { useUserStore } from '../store/user'
+const userStore = useUserStore()
+
+const userLogin = function (){
+  loginForm.value.validate((valid) => {
+    if(valid){
+      userLoginAPI(logForm.value).then(function(res){
+        if (res.data.code == 0){
+          ElMessage.success('登陆成功.')
+          userStore.saveToken(res.data.token)
+          router.push('/index')
+        }else if(res.data.code == 1){
+          ElMessage.error('登陆失败，请重试.')
+        }
+      })
+    }else{
+      ElMessage.error('校验失败，请按要求输入数据')
+    }
+  })
+}
+
 </script>
   
   <style lang="less" scoped>
